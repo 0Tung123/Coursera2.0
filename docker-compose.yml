@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: coursera-postgres
+    ports:
+      - "5433:5432" # Changed from 5432:5432 to use port 5433 on the host
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: coursera20
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - coursera-network
+
+networks:
+  coursera-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

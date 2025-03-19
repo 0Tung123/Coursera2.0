@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: coursera-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - coursera-network
+    environment:
+      - NODE_ENV=production
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: coursera-backend
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+    networks:
+      - coursera-network
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=coursera
+
+  postgres:
+    image: postgres:14-alpine
+    container_name: coursera-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: coursera
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - coursera-network
+
+networks:
+  coursera-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
