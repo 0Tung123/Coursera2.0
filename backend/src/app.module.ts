@@ -5,9 +5,17 @@ import { CoursesModule } from "./courses/courses.module";
 import { DatabaseModule } from "./database/database.module";
 import { ConfigModule } from "./config/config.module";
 import { LoggerMiddleware } from "./common/middleware/logger.middleware";
+import { UsersModule } from "./users/users.module";
+import { AuthModule } from "./auth/auth.module";
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, CoursesModule],
+  imports: [
+    ConfigModule,
+    DatabaseModule,
+    UsersModule,
+    AuthModule,
+    CoursesModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
