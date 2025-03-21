@@ -28,6 +28,16 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email } });
   }
 
+  async findByVerificationToken(token: string): Promise<User> {
+    return this.usersRepository.findOne({
+      where: { verificationToken: token },
+    });
+  }
+
+  async save(user: User): Promise<User> {
+    return this.usersRepository.save(user);
+  }
+
   async create(createUserDto: CreateUserDto): Promise<User> {
     const existingUser = await this.findByEmail(createUserDto.email);
     if (existingUser) {

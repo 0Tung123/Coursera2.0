@@ -53,4 +53,12 @@ export class CreateUserDto {
   @IsOptional()
   @IsEnum(UserRole)
   role?: UserRole;
+
+  @ApiProperty({
+    description: "The verification token for email verification",
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  verificationToken?: string;
 }
