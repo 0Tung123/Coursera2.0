@@ -1,34 +1,90 @@
-import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Course } from "./entities/course.entity";
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from "@nestjs/common"
+import { InjectRepository } from "@nestjs/typeorm"
+import { Repository } from "typeorm"
+import { Course } from "./entities/course.entity"
+import { CreateCourseDto } from "./dto/create-course.dto"
+import { UpdateCourseDto } from "./dto/update-course.dto"
 
 @Injectable()
 export class CoursesService {
   constructor(
     @InjectRepository(Course)
-    private coursesRepository: Repository<Course>
+    private coursesRepository: Repository<Course>,
   ) {}
 
-  findAll(): Promise<Course[]> {
-    return this.coursesRepository.find();
+  async findAll(): Promise<Course[]> {
+    return this.coursesRepository.find()
   }
 
-  findOne(id: string): Promise<Course> {
-    return this.coursesRepository.findOne({ where: { id } });
+  async findOne(course_id: string): Promise<Course> {
+    const course = await this.coursesRepository.findOne({
+      where: {
+        Course_id: course_id,
+      },
+    })
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${course_id} not found`)
+    }
+    return course
+  }
+  async createCourse(createCourseDto: CreateCourseDto): Promise<Course> {
+    try {
+      const course = this.coursesRepository.create(createCourseDto)
+      return await this.coursesRepository.save(course)
+    } catch (error) {
+      throw new BadRequestException(`Failed to create course: ${error.message}`)
+    }
   }
 
-  async create(course: Partial<Course>): Promise<Course> {
-    const newCourse = this.coursesRepository.create(course);
-    return this.coursesRepository.save(newCourse);
+  async updateCourse(
+    course_id: string,
+    updateCourseDto: UpdateCourseDto,
+  ): Promise<Course> {
+    try {
+      const course = await this.coursesRepository.findOne({
+        where: {
+          Course_id: course_id,
+        },
+      })
+      if (!course) {
+        throw new NotFoundException(`Course with ID ${course_id} not found`)
+      }
+
+      // Merge the update data with the existing course
+      Object.assign(course, updateCourseDto)
+
+      // Save the updated course
+      return await this.coursesRepository.save(course)
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error
+      }
+      throw new BadRequestException(`Failed to update course: ${error.message}`)
+    }
   }
 
-  async update(id: string, course: Partial<Course>): Promise<Course> {
-    await this.coursesRepository.update(id, course);
-    return this.coursesRepository.findOne({ where: { id } });
-  }
+  async removeCourse(course_id: string): Promise<void> {
+    try {
+      const course = await this.coursesRepository.findOne({
+        where: {
+          Course_id: course_id,
+        },
+      })
+      if (!course) {
+        throw new NotFoundException(`Course with ID ${course_id} not found`)
+      }
 
-  async remove(id: string): Promise<void> {
-    await this.coursesRepository.delete(id);
+      // Remove the course
+      await this.coursesRepository.remove(course)
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error
+      }
+      throw new BadRequestException(`Failed to remove course: ${error.message}`)
+    }
   }
 }

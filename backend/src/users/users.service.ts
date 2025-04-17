@@ -20,8 +20,8 @@ export class UsersService {
     return this.usersRepository.find()
   }
 
-  async findOne(id: string): Promise<User> {
-    return this.usersRepository.findOne({ where: { id } })
+  async findOne(user_id: string): Promise<User> {
+    return this.usersRepository.findOne({ where: { user_id } })
   }
 
   async findByEmail(email: string): Promise<User> {

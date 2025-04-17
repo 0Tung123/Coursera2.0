@@ -1,6 +1,13 @@
-import { Entity, Column, PrimaryGeneratedColumn, BeforeInsert } from "typeorm"
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  BeforeInsert,
+  OneToMany,
+} from "typeorm"
 import * as bcrypt from "bcrypt"
 import { ApiProperty } from "@nestjs/swagger"
+import { UserCourse } from "./user-course.entity"
 
 export enum UserRole {
   USER = "user",
@@ -12,7 +19,7 @@ export enum UserRole {
 export class User {
   @ApiProperty({ description: "The unique identifier of the user" })
   @PrimaryGeneratedColumn("uuid")
-  id: string
+  user_id: string
 
   @ApiProperty({
     description: "The email address of the user",
@@ -35,6 +42,20 @@ export class User {
   @ApiProperty({ description: "The last name of the user", example: "Doe" })
   @Column()
   lastName: string
+
+  @ApiProperty({
+    description: "Password reset token",
+    required: false,
+  })
+  @Column({ nullable: true })
+  resetToken?: string
+
+  @ApiProperty({
+    description: "Password reset token expiration date",
+    required: false,
+  })
+  @Column({ nullable: true })
+  resetTokenExpires?: Date
 
   @ApiProperty({
     description: "The role of the user",
@@ -76,4 +97,7 @@ export class User {
   async validatePassword(password: string): Promise<boolean> {
     return bcrypt.compare(password, this.password)
   }
+
+  @OneToMany(() => UserCourse, (userCourse) => userCourse.user)
+  courses: UserCourse[]
 }

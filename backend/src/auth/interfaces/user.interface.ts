@@ -1,7 +1,7 @@
 import { UserRole } from "../../users/entities/user.entity"
 
 export interface AuthUser {
-  id: string
+  user_id: string
   email: string
   firstName: string
   lastName: string

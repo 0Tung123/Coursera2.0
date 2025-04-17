@@ -46,14 +46,14 @@ export class AuthService {
 
     const payload: JwtPayload = {
       email: user.email,
-      sub: user.id,
+      sub: user.user_id,
       role: user.role,
     }
 
     return {
       accessToken: this.jwtService.sign(payload),
       user: {
-        id: user.id,
+        id: user.user_id,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -78,6 +78,31 @@ export class AuthService {
     await this.mailService.sendVerificationEmail(user, verificationToken)
 
     return user
+  }
+
+  async forgotPassword(
+    email: string,
+  ): Promise<{ message: string; resetToken: string }> {
+    const user = await this.usersService.findByEmail(email)
+    if (!user)
+      return {
+        message: "If the email exists, a reset link has been sent",
+        resetToken: "",
+      }
+
+    const resetToken = uuidv4()
+    const resetTokenExpires = new Date(Date.now() + 3600000) // 1 hour
+
+    await this.usersService.update(user.user_id, {
+      resetToken,
+      resetTokenExpires,
+    })
+
+    await this.mailService.sendPasswordResetEmail(user, resetToken)
+    return {
+      message: "If the email exists, a reset link has been sent",
+      resetToken,
+    }
   }
 
   async verifyEmail(token: string): Promise<User> {

@@ -12,21 +12,23 @@ import {
   Query,
   HttpCode,
   HttpStatus,
-} from "@nestjs/common";
-import { AuthService } from "./auth.service";
-import { LoginDto } from "../users/dto/login.dto";
-import { CreateUserDto } from "../users/dto/create-user.dto";
-import { JwtAuthGuard } from "./guards/jwt-auth.guard";
-import { HttpExceptionFilter } from "../common/filters/http-exception.filter";
-import { TransformInterceptor } from "../common/interceptors/transform.interceptor";
+} from "@nestjs/common"
+import { AuthService } from "./auth.service"
+import { LoginDto } from "../users/dto/login.dto"
+import { CreateUserDto } from "../users/dto/create-user.dto"
+import { JwtAuthGuard } from "./guards/jwt-auth.guard"
+import { HttpExceptionFilter } from "../common/filters/http-exception.filter"
+import { TransformInterceptor } from "../common/interceptors/transform.interceptor"
+import { Public } from "./decorators/public.decorator"
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
   ApiQuery,
-} from "@nestjs/swagger";
-import { User } from "../users/entities/user.entity";
+} from "@nestjs/swagger"
+import { User } from "../users/entities/user.entity"
+import { ForgotPasswordDto } from "src/users/dto/fogotPassword.dto"
 
 @ApiTags("auth")
 @Controller("auth")
@@ -34,6 +36,16 @@ import { User } from "../users/entities/user.entity";
 @UseInterceptors(TransformInterceptor)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @ApiOperation({
+    summary: "Forgot password",
+    description: "Send password reset email to user",
+  })
+  @Public()
+  @Post("forgot-password")
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto.email)
+  }
 
   @ApiOperation({
     summary: "User login",
@@ -59,10 +71,11 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: "Invalid credentials" })
+  @Public()
   @Post("login")
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+    return this.authService.login(loginDto)
   }
 
   @ApiOperation({
@@ -72,15 +85,16 @@ export class AuthController {
   @ApiResponse({ status: 201, description: "User registered successfully" })
   @ApiResponse({ status: 400, description: "Bad request - validation error" })
   @ApiResponse({ status: 409, description: "Conflict - email already exists" })
+  @Public()
   @Post("register")
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async register(@Body() createUserDto: CreateUserDto) {
-    const user = await this.authService.register(createUserDto);
+    const user = await this.authService.register(createUserDto)
     return {
       message:
         "Registration successful. Please check your email to verify your account.",
-      userId: user.id,
-    };
+      userId: user.user_id,
+    }
   }
 
   @ApiOperation({
@@ -97,11 +111,12 @@ export class AuthController {
     status: 404,
     description: "Verification token not found or expired",
   })
+  @Public()
   @Get("verify-email")
   @HttpCode(HttpStatus.OK)
   async verifyEmail(@Query("token") token: string) {
-    await this.authService.verifyEmail(token);
-    return { message: "Email verified successfully. You can now log in." };
+    await this.authService.verifyEmail(token)
+    return { message: "Email verified successfully. You can now log in." }
   }
 
   @ApiOperation({
@@ -118,6 +133,6 @@ export class AuthController {
   @Get("profile")
   @UseGuards(JwtAuthGuard)
   async getProfile(@Request() req) {
-    return this.authService.getProfile(req.user.userId);
+    return this.authService.getProfile(req.user.userId)
   }
 }
